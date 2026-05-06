@@ -70,6 +70,7 @@ class LandmarkMapper(Node):
         self.sweep_started_at: Optional[float] = None
         self.sweep_duration = 0.0
         self.sweep_speed = abs(args.angular_speed)
+        self.sweep_done_logged = False
         self.cmd_pub = self.create_publisher(Twist, args.cmd_vel_topic, 10)
         if self.sweep_enabled:
             if self.sweep_speed <= 0.0:
@@ -194,6 +195,9 @@ class LandmarkMapper(Node):
             self.get_logger().info(f'Detected markers with sample counts: {ids}', throttle_duration_sec=2.0)
 
     def sweep_step(self):
+        if not self.sweep_enabled:
+            return
+
         now = time.monotonic()
         if self.sweep_started_at is None:
             self.sweep_started_at = now
@@ -208,7 +212,9 @@ class LandmarkMapper(Node):
         self.cmd_pub.publish(twist)
         self.sweep_enabled = False
         self.write_yaml()
-        self.get_logger().info('Sweep complete. Stop the mapper with Ctrl+C or run the tour node.')
+        if not self.sweep_done_logged:
+            self.sweep_done_logged = True
+            self.get_logger().info('Sweep complete. Stop the mapper with Ctrl+C or run the tour node.')
 
     def write_yaml(self):
         usable = [stats.as_landmark() for _, stats in sorted(self.landmarks.items()) if stats.samples >= self.min_samples]
