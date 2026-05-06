@@ -1,0 +1,256 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="tour_world">
+
+    <physics name="1ms" type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>1000.0</real_time_update_rate>
+    </physics>
+
+    <plugin filename="gz-sim-physics-system"
+        name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system"
+        name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system"
+        name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system"
+        name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="gz-sim-imu-system"
+        name="gz::sim::systems::Imu"/>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>1 1 1 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <cast_shadows>false</cast_shadows>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.5 0.5 0.5 1</ambient>
+            <diffuse>0.5 0.5 0.5 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ===== OUTER WALLS ===== -->
+    <model name="wall_south">
+      <static>true</static>
+      <pose>2.286 0.0 1.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>4.572 0.15 2.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>4.572 0.15 2.5</size></box></geometry>
+          <material><ambient>0.8 0.8 0.8 1</ambient><diffuse>0.8 0.8 0.8 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_north">
+      <static>true</static>
+      <pose>2.286 6.096 1.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>4.572 0.15 2.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>4.572 0.15 2.5</size></box></geometry>
+          <material><ambient>0.8 0.8 0.8 1</ambient><diffuse>0.8 0.8 0.8 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_west">
+      <static>true</static>
+      <pose>0.0 3.048 1.25 0 0 1.5708</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>6.096 0.15 2.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>6.096 0.15 2.5</size></box></geometry>
+          <material><ambient>0.8 0.8 0.8 1</ambient><diffuse>0.8 0.8 0.8 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_east">
+      <static>true</static>
+      <pose>4.572 3.048 1.25 0 0 1.5708</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>6.096 0.15 2.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>6.096 0.15 2.5</size></box></geometry>
+          <material><ambient>0.8 0.8 0.8 1</ambient><diffuse>0.8 0.8 0.8 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ===== INNER WALLS ===== -->
+    <model name="wall_room_south">
+      <static>true</static>
+      <pose>1.524 1.524 1.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>3.048 0.15 2.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>3.048 0.15 2.5</size></box></geometry>
+          <material><ambient>0.7 0.7 0.9 1</ambient><diffuse>0.7 0.7 0.9 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_room_east_south">
+      <static>true</static>
+      <pose>3.048 2.286 1.25 0 0 1.5708</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>1.524 0.15 2.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>1.524 0.15 2.5</size></box></geometry>
+          <material><ambient>0.7 0.7 0.9 1</ambient><diffuse>0.7 0.7 0.9 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_room_east_north">
+      <static>true</static>
+      <pose>3.048 5.334 1.25 0 0 1.5708</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>1.524 0.15 2.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>1.524 0.15 2.5</size></box></geometry>
+          <material><ambient>0.7 0.7 0.9 1</ambient><diffuse>0.7 0.7 0.9 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ===== ARUCO MARKERS ===== -->
+    <!--
+      Marker 0: South outer wall, facing inward (north), at z=0.5 (camera height)
+      Marker 1: North outer wall, facing inward (south), at z=0.5
+      Marker 2: West outer wall, facing inward (east), at z=0.5
+      Marker 3: Inner south wall, facing south (into outer room), at z=0.5
+    -->
+
+    <!-- Marker 0 — south wall, faces north into room -->
+    <model name="aruco_marker_0">
+      <static>true</static>
+      <pose>2.286 0.08 0.5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <box><size>0.3 0.01 0.3</size></box>
+          </geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://aruco_marker_0/materials/textures/marker_0.png</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Marker 1 — north wall, faces south into room -->
+    <model name="aruco_marker_1">
+      <static>true</static>
+      <pose>2.286 6.016 0.5 0 0 3.1416</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <box><size>0.3 0.01 0.3</size></box>
+          </geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://aruco_marker_1/materials/textures/marker_1.png</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Marker 2 — west wall, faces east into room -->
+    <model name="aruco_marker_2">
+      <static>true</static>
+      <pose>0.08 3.048 0.5 0 0 1.5708</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <box><size>0.3 0.01 0.3</size></box>
+          </geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://aruco_marker_2/materials/textures/marker_2.png</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Marker 3 — inner south wall, faces south into outer corridor -->
+    <model name="aruco_marker_3">
+      <static>true</static>
+      <pose>1.524 1.449 0.5 0 0 3.1416</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <box><size>0.3 0.01 0.3</size></box>
+          </geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>model://aruco_marker_3/materials/textures/marker_3.png</albedo_map>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>
