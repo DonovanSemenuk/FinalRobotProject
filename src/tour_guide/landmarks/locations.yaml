@@ -1,0 +1,25 @@
+landmarks:
+  - name: Landmark 0
+    marker_id: 0
+    x: 1.55
+    y: 1.90
+    yaw: 0.0
+    description: Static fallback landmark 0
+  - name: Landmark 1
+    marker_id: 1
+    x: -0.31
+    y: -0.07
+    yaw: 0.0
+    description: Static fallback landmark 1
+  - name: Landmark 2
+    marker_id: 2
+    x: 2.92
+    y: -0.13
+    yaw: 0.0
+    description: Static fallback landmark 2
+  - name: Landmark 3
+    marker_id: 3
+    x: -0.20
+    y: -2.24
+    yaw: 0.0
+    description: Static fallback landmark 3
