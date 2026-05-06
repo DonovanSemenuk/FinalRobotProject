@@ -5,7 +5,7 @@ package_name = 'tour_guide'
 
 setup(
     name=package_name,
-    version='0.0.0',
+    version='0.1.0',
     packages=find_packages(exclude=['test']),
     data_files=[
         ('share/ament_index/resource_index/packages',
@@ -17,6 +17,8 @@ setup(
             glob('worlds/*')),
         ('share/' + package_name + '/maps',
             glob('maps/*')),
+        ('share/' + package_name + '/landmarks',
+            glob('landmarks/*.yaml')),
         ('share/' + package_name + '/models/aruco_marker_0',
             ['models/aruco_marker_0/model.config',
              'models/aruco_marker_0/model.sdf']),
@@ -38,18 +40,19 @@ setup(
         ('share/' + package_name + '/models/aruco_marker_3/materials/textures',
             ['models/aruco_marker_3/materials/textures/marker_3.png']),
     ],
-    install_requires=['setuptools'],
+    install_requires=['setuptools', 'PyYAML'],
     zip_safe=True,
-    maintainer='bryanltran',
-    maintainer_email='bryan.l.tran-1@ou.edu',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    maintainer='Donovan Semenuk',
+    maintainer_email='donovansemenuk@ou.edu',
+    description='TurtleBot4 autonomous tour guide using Nav2 and ArUco landmarks.',
+    license='MIT',
     extras_require={
         'test': ['pytest'],
     },
     entry_points={
         'console_scripts': [
             'nav_node = tour_guide.navnode:main',
+            'landmark_mapper = tour_guide.landmark_mapper:main',
         ],
     },
 )
