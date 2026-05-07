@@ -7,7 +7,7 @@ import os
 
 
 def generate_launch_description():
-    """Launch localization and Nav2 for a physical TurtleBot 4 using a saved map."""
+    """Launch localization and Nav2 for a physical TurtleBot 4 using the saved loggerhead classroom map."""
 
     turtlebot4_navigation = get_package_share_directory('turtlebot4_navigation')
 
@@ -22,12 +22,14 @@ def generate_launch_description():
         'nav2.launch.py',
     )
 
+    default_map = os.path.expanduser(
+        '~/ros2_ws/FinalRobotProject/src/tour_guide/maps/loggerhead_classroom.yaml'
+    )
+
     return LaunchDescription([
         DeclareLaunchArgument(
             'map',
-            default_value=os.path.expanduser(
-                '~/ros2_ws/FinalRobotProject/src/tour_guide/maps/classroom_map.yaml'
-            ),
+            default_value=default_map,
             description='Full path to the saved occupancy-grid YAML map.',
         ),
         DeclareLaunchArgument(
