@@ -46,7 +46,7 @@ source /opt/ros/jazzy/setup.bash
 source install/setup.bash
 ```
 
-## Real robot milestone 1: connect to terrapin
+## Real robot milestone 1: connect to loggerhead
 
 On each desktop terminal that talks to the robot:
 
@@ -57,7 +57,7 @@ robot-setup.sh
 Enter:
 
 ```text
-terrapin
+loggerhead
 ```
 
 Then run the environment commands printed by the script. Verify the desktop can see the robot:
@@ -80,7 +80,7 @@ Minimal command sequence:
 
 ```bash
 # robot SSH terminal
-ssh student@terrapin.cs.nor.ou.edu
+ssh student@loggerhead.cs.nor.ou.edu
 ros2 service call /start_motor std_srvs/srv/Empty "{}"
 ```
 
@@ -144,7 +144,18 @@ The fastest reliable path is to start with manual landmarks. After the map works
 landmarks/discovered_locations.yaml
 ```
 
-Example format:
+Recommended recorder method:
+
+```bash
+cd ~/ros2_ws/FinalRobotProject
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+ros2 run tour_guide known_stop_recorder --output ~/ros2_ws/FinalRobotProject/landmarks/discovered_locations.yaml
+```
+
+In RViz, set Fixed Frame to `map`, choose `Publish Point`, and click open floor locations where the robot should stop. The recorder will append stops to the YAML file.
+
+Manual YAML format:
 
 ```yaml
 landmarks:
@@ -160,7 +171,7 @@ landmarks:
     description: First classroom stop.
 ```
 
-Use RViz `Publish Point`, `/clicked_point`, or inspected map coordinates to fill in stop coordinates. Keep stops conservative: place them in open floor, not directly against walls, chairs, tables, or marker boards.
+Keep stops conservative: place them in open floor, not directly against walls, chairs, tables, or marker boards.
 
 ## Real robot milestone 5: run the tour
 
