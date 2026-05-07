@@ -1,86 +1,71 @@
-# Running the Tour Guide on an OU TurtleBot 4
+# Running the Loggerhead Classroom Tour on an OU TurtleBot 4
 
-This package contains a ROS 2 TurtleBot 4 tour-guide node. In simulation, use the package launch file to bring up Gazebo Harmonic, Nav2, the included map, and the included world. On the real OU TurtleBot 4, connect the lab desktop to the robot first, verify that the robot is publishing ROS topics, then run only the tour-guide node from the desktop terminal.
+This repo is set up for a practical real-robot demo: load the saved `loggerhead_classroom.yaml` map, activate TurtleBot4 Nav2, record or edit safe classroom waypoints, then run the tour node through those waypoints.
 
-## 1. Build the workspace on the lab desktop
+The goal is not to rebuild the map. The goal is to make Nav2 active and send reliable map-frame goals.
 
-From the repository root on the Ubuntu 24.04 desktop:
+## 1. Update and build on the robotics6 desktop
 
 ```bash
-cd /workspace/FinalRobotProject
+cd ~/ros2_ws/FinalRobotProject
+git pull
 source /opt/ros/jazzy/setup.bash
 rosdep install --from-paths src -y --ignore-src
 colcon build --symlink-install
 source install/setup.bash
 ```
 
-Open every new terminal from this repository and source both ROS and the workspace before running ROS commands:
+Run these source commands in every new desktop terminal before ROS commands:
 
 ```bash
-cd /workspace/FinalRobotProject
+cd ~/ros2_ws/FinalRobotProject
 source /opt/ros/jazzy/setup.bash
 source install/setup.bash
 ```
 
-## 2. Optional: test the project in simulation first
+## 2. Connect to TurtleBot `testudo`
 
-Use this when you want to verify that the package starts correctly before using hardware:
-
-```bash
-ros2 launch tour_guide launch.py
-```
-
-In a second sourced desktop terminal, start the interactive tour menu:
+### Robot terminal
 
 ```bash
-ros2 run tour_guide nav_node
-```
-
-The node prints a landmark menu. Enter the number for a waypoint, wait for the robot to drive there, and enter `4` to exit.
-
-## 3. Connect to the real OU TurtleBot 4
-
-Replace `<robot_name>` with the name printed on the TurtleBot, such as `matamata`.
-
-### Robot terminal: SSH into the TurtleBot
-
-```bash
-ssh student@<robot_name>.cs.nor.ou.edu
-```
-
-After logging into the Raspberry Pi, verify that the robot topics exist:
-
-```bash
+ssh student@testudo.cs.nor.ou.edu
 ros2 topic list
 ```
 
-Confirm that `/scan`, `/tf`, and `/odom` are visible. If they are missing, restart ROS discovery on the robot:
+Verify `/scan`, `/tf`, and `/odom` exist. If they do not:
 
 ```bash
 turtlebot4-daemon-restart
+ros2 topic list
 ```
 
-If the topics are still missing after the robot finishes booting, manually start bringup:
+If they are still missing:
 
 ```bash
 ros2 launch turtlebot4_bringup robot.launch.py
 ```
 
-Start the LiDAR motor before navigating:
+Start the LiDAR motor:
 
 ```bash
 ros2 service call /start_motor std_srvs/srv/Empty "{}"
 ```
 
-### Desktop terminal: join the robot ROS network
+### Desktop terminal
 
-On the lab desktop, do not SSH for this step:
+Do this on robotics6, not inside SSH:
 
 ```bash
 robot-setup.sh
 ```
 
-Enter the TurtleBot name when prompted. Then follow the environment-variable commands printed by the script. After that, restart the ROS daemon and verify that the desktop can see the robot:
+Enter:
+
+```text
+testudo
+```
+
+Run the environment commands printed by `robot-setup.sh`, then:
 
 ```bash
 ros2 daemon stop
@@ -88,53 +73,142 @@ ros2 daemon start
 ros2 topic list
 ```
 
-You should see robot topics such as `/scan`, `/tf`, and `/odom` from the desktop terminal.
+You must see `/scan`, `/tf`, and `/odom` from the desktop before launching Nav2.
 
-## 4. Start navigation support for the real robot
+## 3. Launch Nav2 with the loggerhead map
 
-The tour-guide node sends goals through Nav2, so the real robot must have localization and Nav2 active before starting the tour menu.
-
-If your robot already has a saved map and Nav2 launch command supplied by the lab, start that command in a sourced desktop terminal. If you are using this repository's included map as a placeholder, you can pass it to the TurtleBot 4 navigation launch setup used in your lab environment. For example, if your TurtleBot 4 image provides the standard navigation launch file:
+In a sourced robotics6 desktop terminal:
 
 ```bash
-ros2 launch turtlebot4_navigation nav2.launch.py map:=$(pwd)/src/tour_guide/maps/map_area.yaml
-```
-
-Keep this Nav2 terminal running. In RViz, set the robot's initial pose if needed so the map frame matches the physical robot's location.
-
-> Important: the hard-coded tour waypoints in `tour_guide/navnode.py` are map-frame coordinates. For the real classroom demo, update those coordinates to match the map you are using before running the tour.
-
-## 5. Run the tour-guide node on the desktop
-
-In a new sourced desktop terminal that has also run the `robot-setup.sh` instructions:
-
-```bash
-cd /workspace/FinalRobotProject
+cd ~/ros2_ws/FinalRobotProject
 source /opt/ros/jazzy/setup.bash
 source install/setup.bash
-ros2 run tour_guide nav_node
+ros2 launch tour_guide real_nav.launch.py map:=$PWD/src/tour_guide/maps/loggerhead_classroom.yaml
 ```
 
-Use the menu:
+Keep this terminal running.
 
-- `0` sends the robot to Waypoint 1.
-- `1` sends the robot to Waypoint 2.
-- `2` sends the robot to Waypoint 3.
-- `3` sends the robot to Waypoint 4.
-- `4` exits the program.
+This launch file uses TurtleBot4 `nav_bringup.launch.py` with SLAM off, localization on, and `use_sim_time:=false`.
 
-Watch the robot while it moves. Be ready to stop the program with `Ctrl+C` or use teleoperation/emergency stop if the map, localization, or waypoint coordinates are wrong.
+## 4. Open RViz and set localization
 
-## 6. Shutdown checklist
+In a second sourced robotics6 desktop terminal:
 
-When finished:
+```bash
+ros2 launch turtlebot4_viz view_robot.launch.py
+```
 
-1. Stop the tour node with menu option `4` or `Ctrl+C`.
-2. Stop Nav2/RViz/other launch files with `Ctrl+C`.
-3. On the robot terminal, stop the LiDAR motor:
+In RViz:
 
-   ```bash
-   ros2 service call /stop_motor std_srvs/srv/Empty "{}"
-   ```
+1. Set the fixed frame to `map`.
+2. Use `2D Pose Estimate` to place the robot on the loggerhead classroom map.
+3. Confirm the laser scan lines up with walls/obstacles.
+4. Do not send goals until the scan matches the map. Bad localization means bad navigation.
 
-4. Return the TurtleBot to its charging dock.
+Check Nav2 state:
+
+```bash
+ros2 lifecycle get /controller_server
+ros2 lifecycle get /planner_server
+ros2 lifecycle get /bt_navigator
+ros2 action list | grep navigate
+```
+
+Expected lifecycle state is `active`. Expected actions include `/navigate_to_pose`.
+
+## 5. Make waypoint YAML from RViz clicks
+
+Use this when your existing `landmarks/locations.yaml` does not match the real loggerhead map well enough.
+
+In a third sourced robotics6 desktop terminal:
+
+```bash
+cd ~/ros2_ws/FinalRobotProject
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+rm -f landmarks/discovered_locations.yaml
+ros2 run tour_guide known_stop_recorder --output $PWD/landmarks/discovered_locations.yaml
+```
+
+In RViz, use `Publish Point` and click safe open-floor spots. Do not click walls, cardboard, chairs, or narrow gaps.
+
+Verify the file:
+
+```bash
+cat landmarks/discovered_locations.yaml
+```
+
+## 6. Test one waypoint before running the tour
+
+First test Nav2 directly from RViz with `Nav2 Goal`. If that works, test the tour node with a single waypoint:
+
+```bash
+cd ~/ros2_ws/FinalRobotProject
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+ros2 run tour_guide nav_node --landmarks $PWD/landmarks/discovered_locations.yaml --route 0 --once
+```
+
+If this fails, do not run `all`. Fix localization or move the waypoint farther into open floor.
+
+## 7. Run the full classroom waypoint tour
+
+```bash
+cd ~/ros2_ws/FinalRobotProject
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+ros2 run tour_guide nav_node --landmarks $PWD/landmarks/discovered_locations.yaml --route all --once
+```
+
+Alternate routes:
+
+```bash
+ros2 run tour_guide nav_node --landmarks $PWD/landmarks/discovered_locations.yaml --route nearest --once
+ros2 run tour_guide nav_node --landmarks $PWD/landmarks/discovered_locations.yaml --route 0,2,1 --once
+```
+
+## 8. Hard failures and what they mean
+
+### Nav2 does not become active
+
+Check that the desktop can see robot topics:
+
+```bash
+ros2 topic list | egrep '/scan|/tf|/odom'
+```
+
+Then check lifecycle nodes:
+
+```bash
+ros2 lifecycle get /map_server
+ros2 lifecycle get /amcl
+ros2 lifecycle get /controller_server
+ros2 lifecycle get /planner_server
+ros2 lifecycle get /bt_navigator
+```
+
+If `/map_server` or `/amcl` is missing, the Nav2 launch did not start correctly. Restart the `real_nav.launch.py` terminal.
+
+### RViz shows the map but the robot does not move
+
+This usually means one of three things:
+
+1. Nav2 is not active.
+2. The initial pose is wrong.
+3. The waypoint is inside an obstacle or outside the usable map.
+
+Do not keep changing code blindly. First prove RViz `Nav2 Goal` works.
+
+### The robot spins, hesitates, or immediately aborts
+
+Move the waypoint farther from walls/obstacles and reset the initial pose. The loggerhead map has a large origin offset, but RViz clicks are already in map coordinates, so use clicked points instead of guessing numbers.
+
+## 9. Shutdown
+
+Stop the tour node and Nav2 with `Ctrl+C`. On the robot terminal:
+
+```bash
+ros2 service call /stop_motor std_srvs/srv/Empty "{}"
+```
+
+Return the robot to its dock.
