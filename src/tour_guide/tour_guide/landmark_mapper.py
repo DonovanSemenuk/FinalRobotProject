@@ -9,7 +9,7 @@ from typing import Optional, Tuple
 
 import rclpy
 import yaml
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, TwistStamped
 from rclpy.duration import Duration
 from rclpy.node import Node
 from ros2_aruco_interfaces.msg import ArucoMarkers
@@ -71,7 +71,10 @@ class LandmarkMapper(Node):
         self.sweep_duration = 0.0
         self.sweep_speed = abs(args.angular_speed)
         self.sweep_done_logged = False
-        self.cmd_pub = self.create_publisher(Twist, args.cmd_vel_topic, 10)
+        self.cmd_vel_stamped = not args.unstamped_cmd_vel
+        self.cmd_vel_topic = args.cmd_vel_topic
+        msg_type = TwistStamped if self.cmd_vel_stamped else Twist
+        self.cmd_pub = self.create_publisher(msg_type, self.cmd_vel_topic, 10)
         if self.sweep_enabled:
             if self.sweep_speed <= 0.0:
                 raise ValueError('--angular-speed must be greater than zero')
@@ -79,7 +82,8 @@ class LandmarkMapper(Node):
             self.create_timer(0.1, self.sweep_step)
             self.get_logger().info(
                 f'Sweep enabled: {args.sweep_revolutions:.2f} rev at {self.sweep_speed:.2f} rad/s '
-                f'for about {self.sweep_duration:.1f} s'
+                f'for about {self.sweep_duration:.1f} s using '
+                f'{"TwistStamped" if self.cmd_vel_stamped else "Twist"} on {self.cmd_vel_topic}'
             )
 
         self.get_logger().info(f'Listening on {self.topic}')
@@ -91,6 +95,21 @@ class LandmarkMapper(Node):
             2.0 * (q.w * q.z + q.x * q.y),
             1.0 - 2.0 * (q.y * q.y + q.z * q.z),
         )
+
+    def make_cmd_vel(self, angular_z: float):
+        if self.cmd_vel_stamped:
+            msg = TwistStamped()
+            msg.header.stamp = self.get_clock().now().to_msg()
+            msg.header.frame_id = self.base_frame
+            msg.twist.angular.z = angular_z
+            return msg
+
+        msg = Twist()
+        msg.angular.z = angular_z
+        return msg
+
+    def publish_stop(self) -> None:
+        self.cmd_pub.publish(self.make_cmd_vel(0.0))
 
     def lookup_transform(self, target: str, source: str):
         return self.tf_buffer.lookup_transform(
@@ -203,13 +222,11 @@ class LandmarkMapper(Node):
             self.sweep_started_at = now
 
         elapsed = now - self.sweep_started_at
-        twist = Twist()
         if elapsed < self.sweep_duration:
-            twist.angular.z = self.sweep_speed
-            self.cmd_pub.publish(twist)
+            self.cmd_pub.publish(self.make_cmd_vel(self.sweep_speed))
             return
 
-        self.cmd_pub.publish(twist)
+        self.publish_stop()
         self.sweep_enabled = False
         self.write_yaml()
         if not self.sweep_done_logged:
@@ -245,6 +262,11 @@ def main(args=None):
     parser.add_argument('--sweep-revolutions', type=float, default=1.0)
     parser.add_argument('--angular-speed', type=float, default=0.35)
     parser.add_argument('--cmd-vel-topic', default='/cmd_vel')
+    parser.add_argument(
+        '--unstamped-cmd-vel',
+        action='store_true',
+        help='Publish geometry_msgs/Twist instead of TwistStamped for older command-velocity bridges.',
+    )
     parsed = parser.parse_args(args)
 
     rclpy.init(args=args)
@@ -254,8 +276,7 @@ def main(args=None):
     except KeyboardInterrupt:
         pass
     finally:
-        zero = Twist()
-        node.cmd_pub.publish(zero)
+        node.publish_stop()
         node.write_yaml()
         node.destroy_node()
         rclpy.shutdown()
