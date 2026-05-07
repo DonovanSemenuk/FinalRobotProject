@@ -3,7 +3,7 @@
 <package format="3">
   <name>tour_guide</name>
   <version>0.1.0</version>
-  <description>TurtleBot4 autonomous tour guide using Nav2 and ArUco landmarks.</description>
+  <description>TurtleBot4 autonomous tour guide using Nav2 and classroom landmarks.</description>
   <maintainer email="donovansemenuk@ou.edu">Donovan Semenuk</maintainer>
   <license>MIT</license>
 
@@ -15,7 +15,6 @@
   <depend>tf2_ros</depend>
   <depend>tf2_geometry_msgs</depend>
   <depend>turtlebot4_navigation</depend>
-  <depend>ros2_aruco_interfaces</depend>
 
   <exec_depend>python3-yaml</exec_depend>
 
