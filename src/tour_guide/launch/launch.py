@@ -10,7 +10,7 @@ def generate_launch_description():
     nav2_share = get_package_share_directory('nav2_bringup')
 
     default_world = os.path.join(pkg_share, 'worlds', 'tour_world.sdf')
-    default_map   = os.path.join(pkg_share, 'maps', 'sim.yaml')
+    default_map   = os.path.join(pkg_share, 'maps', 'map_area.yaml')
     tb4_sim_launch = os.path.join(nav2_share, 'launch', 'tb4_simulation_launch.py')
 
     return LaunchDescription([
