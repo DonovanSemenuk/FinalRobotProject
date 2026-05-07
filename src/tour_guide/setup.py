@@ -28,13 +28,14 @@ setup(
     zip_safe=True,
     maintainer='Donovan Semenuk',
     maintainer_email='donovansemenuk@ou.edu',
-    description='TurtleBot4 autonomous tour guide using Nav2 and ArUco landmarks.',
+    description='TurtleBot4 autonomous tour guide using Nav2 and classroom landmarks.',
     license='MIT',
     extras_require={'test': ['pytest']},
     entry_points={
         'console_scripts': [
             'nav_node = tour_guide.navnode:main',
             'landmark_mapper = tour_guide.landmark_mapper:main',
+            'known_stop_recorder = tour_guide.known_stop_recorder:main',
             'sim_aruco_detector = tour_guide.sim_aruco_detector:main',
         ],
     },
