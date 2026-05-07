@@ -1,10 +1,3 @@
-"""Record clicked RViz map points as tour stops.
-
-This helper is intentionally simple for real-robot demos: after a classroom map is
-built and Nav2 is localized, click safe floor locations in RViz and save them to
-a YAML file that navnode.py can drive through.
-"""
-
 from __future__ import annotations
 
 import argparse
