@@ -1,226 +1,191 @@
-# Real TurtleBot 4 Classroom Mapping Procedure
+# Real TurtleBot Mapping Procedure
 
-This guide is for creating a real classroom map with the OU TurtleBot 4 named `terrapin`. The goal is to produce a usable occupancy-grid map that can later support Nav2 tour-guide navigation and landmark-based route execution.
+This is the first real-world milestone: create a usable classroom map while manually driving the TurtleBot. Do not start with custom A* or full autonomy. A bad map will make every later tour demo fail.
 
-## Purpose
+Target robot name used below: `terrapin`.
 
-Before running an autonomous tour, the robot needs a real map of the classroom/demo area. The map should be created by manually driving the robot while SLAM is running. After the map is saved, the resulting `.yaml` and `.pgm` files should be copied into `src/tour_guide/maps/` and used by Nav2.
+## What this proves
+
+This step proves that the desktop can see the robot's ROS graph, the LiDAR is publishing, SLAM can build a map, and the robot can be manually driven through the classroom without bypassing the required ROS 2 stack.
 
 ## Terminal layout
 
-Use at least four terminals:
+Use four desktop terminals and one optional robot SSH terminal.
 
-1. Robot SSH terminal
-2. Desktop robot-network terminal
-3. Desktop SLAM/RViz terminal
-4. Desktop teleoperation terminal
-
-Every desktop terminal that talks to the robot must run the robot setup procedure or inherit the same ROS environment variables.
-
-## 1. Robot terminal: connect to terrapin
+Every desktop terminal must run `robot-setup.sh` first. When prompted, enter:
 
 ```bash
-ssh student@terrapin.cs.nor.ou.edu
-```
-
-Verify robot topics:
-
-```bash
-ros2 topic list
-```
-
-Confirm that these exist:
-
-```text
-/scan
-/tf
-/odom
-/cmd_vel
-```
-
-If they are missing, restart the robot ROS daemon:
-
-```bash
-turtlebot4-daemon-restart
-```
-
-If topics are still missing after restart:
-
-```bash
-ros2 launch turtlebot4_bringup robot.launch.py
-```
-
-Start the LiDAR motor:
-
-```bash
-ros2 service call /start_motor std_srvs/srv/Empty "{}"
-```
-
-Leave this terminal open.
-
-## 2. Desktop terminal: join the robot ROS network
-
-On the lab desktop, not inside SSH:
-
-```bash
-robot-setup.sh
-```
-
-Enter:
-
-```text
 terrapin
 ```
 
-Then run the environment commands printed by the script. They should look similar to this, but use the exact values printed for terrapin:
-
-```bash
-unset ROS_LOCALHOST_ONLY
-export ROS_DOMAIN_ID=<printed_domain_id>
-export ROS_DISCOVERY_SERVER="<printed_discovery_server>"
-export ROS_SUPER_CLIENT=True
-ros2 daemon stop
-ros2 daemon start
-```
-
-Verify the desktop can see the robot:
+After the script prints the environment variables, run the commands it gives you. Then verify:
 
 ```bash
 ros2 topic list | grep -E '/scan|/odom|/tf|/cmd_vel'
 ```
 
-Do not continue until `/scan`, `/odom`, and `/tf` appear from the desktop.
+You must see at least `/scan`, `/odom`, and `/tf`. If not, stop. Fix connectivity before touching the project code.
 
-## 3. Start SLAM mapping
+## Optional robot-side check
 
-In a sourced desktop terminal:
-
-```bash
-source /opt/ros/jazzy/setup.bash
-ros2 launch turtlebot4_navigation slam.launch.py
-```
-
-If that launch file is unavailable on the lab image, try:
+From a desktop terminal:
 
 ```bash
-source /opt/ros/jazzy/setup.bash
-ros2 launch slam_toolbox online_async_launch.py use_sim_time:=false
+ssh student@terrapin.cs.nor.ou.edu
+ros2 topic list | grep -E '/scan|/odom|/tf'
 ```
 
-Leave SLAM running.
-
-## 4. Open RViz
-
-In another sourced desktop terminal:
+If the robot does not show the core topics, restart the robot daemon:
 
 ```bash
-source /opt/ros/jazzy/setup.bash
-ros2 launch turtlebot4_viz view_robot.launch.py
+turtlebot4-daemon-restart
 ```
 
-In RViz, confirm:
+Wait a few seconds and check topics again.
 
-- Laser scan points appear.
-- The map grows as the robot moves.
-- The robot pose does not jump wildly.
-- The map walls look straight enough to support navigation.
+## Terminal 1: start or confirm LiDAR
 
-## 5. Teleoperate slowly while mapping
-
-In another desktop terminal with the robot network environment active:
+Run this on the robot over SSH:
 
 ```bash
-source /opt/ros/jazzy/setup.bash
-ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true
+ros2 service call /start_motor std_srvs/srv/Empty "{}"
 ```
 
-Use conservative speeds:
+Confirm that the LiDAR is physically spinning. If `/scan` exists but RViz shows no laser points, the LiDAR motor is a prime suspect.
 
-```text
-speed: 0.10 m/s
-turn:  0.20 rad/s
-```
+## Terminal 2: launch SLAM on the desktop
 
-Mapping pattern:
-
-1. Start near the intended demo starting location.
-2. Drive around the perimeter first.
-3. Point the LiDAR at walls, corners, doorways, and cardboard boundaries.
-4. Make slow turns. Do not spin rapidly.
-5. Revisit the starting area before saving the map to help loop closure.
-6. Avoid bumping furniture or people.
-
-Bad mapping behavior:
-
-- Fast spinning
-- Repeated collisions
-- Driving through tight obstacles before the perimeter is mapped
-- Saving before the map has clean walls
-- Mapping a room layout different from the final demo layout
-
-## 6. Save the map
-
-Create a map output directory from the repository root:
+Run this on the desktop, not over SSH:
 
 ```bash
 cd ~/ros2_ws/FinalRobotProject
-mkdir -p src/tour_guide/maps
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash 2>/dev/null || true
+ros2 launch turtlebot4_navigation slam.launch.py
 ```
 
-Save the map:
+Use synchronous, careful mapping first. A slow clean map is more valuable than a fast distorted one.
+
+## Terminal 3: RViz map view
+
+Run this on the desktop:
+
+```bash
+ros2 launch turtlebot4_viz view_navigation.launch.py
+```
+
+If `view_navigation.launch.py` is not available, use:
+
+```bash
+ros2 launch turtlebot4_viz view_robot.launch.py
+```
+
+In RViz, watch the map fill in. If the map tears, overlaps, or rotates badly, you are driving too fast or losing scan matching.
+
+## Terminal 4: safe teleop
+
+Run this on the desktop:
+
+```bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true
+```
+
+Drive slowly:
+
+- keep linear speed near `0.10 m/s`
+- keep angular speed near `0.20 rad/s`
+- make slow 360-degree turns near corners and doorways
+- avoid people walking through the scan
+- do not ram chair legs; they create noisy geometry and recovery behavior later
+
+## Mapping route
+
+Use this pattern:
+
+1. Start near the expected tour start pose.
+2. Rotate slowly once so SLAM gets a strong initial scan match.
+3. Drive the room perimeter slowly.
+4. Pause near corners and rotate slightly.
+5. Drive through the center aisle.
+6. Return near the start area.
+7. Stop when RViz shows clean walls and major obstacles.
+
+Do not over-map. A compact, clean classroom map beats a huge distorted map.
+
+## Save the map
+
+Create the map output folder:
+
+```bash
+mkdir -p ~/ros2_ws/FinalRobotProject/src/tour_guide/maps
+cd ~/ros2_ws/FinalRobotProject
+```
+
+Save from the desktop while SLAM is still running:
 
 ```bash
 ros2 run nav2_map_server map_saver_cli -f src/tour_guide/maps/classroom_map
 ```
 
-Expected files:
+You should get:
 
 ```text
 src/tour_guide/maps/classroom_map.yaml
 src/tour_guide/maps/classroom_map.pgm
 ```
 
-Check that they exist:
+If that fails because the map topic is not transient-local, try:
 
 ```bash
-ls -lh src/tour_guide/maps/classroom_map.*
+ros2 run nav2_map_server map_saver_cli -f src/tour_guide/maps/classroom_map --ros-args -p map_subscribe_transient_local:=true
 ```
 
-## 7. Commit the map
+## Commit the map
+
+From the repo root:
 
 ```bash
 cd ~/ros2_ws/FinalRobotProject
 git status
-git add src/tour_guide/maps/classroom_map.yaml src/tour_guide/maps/classroom_map.pgm docs/REAL_ROBOT_MAPPING.md
-git commit -m "Add real robot classroom mapping procedure and map files"
-git push origin main
+git add src/tour_guide/maps/classroom_map.yaml src/tour_guide/maps/classroom_map.pgm
+git commit -m "Add real classroom map"
+git push
 ```
 
-If the map files are large, check size before pushing:
+## First localization check after saving
+
+Stop SLAM and RViz. Then launch localization/Nav2 with the saved map:
 
 ```bash
-du -h src/tour_guide/maps/classroom_map.*
+cd ~/ros2_ws/FinalRobotProject
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+ros2 launch tour_guide real_nav.launch.py map:=$HOME/ros2_ws/FinalRobotProject/src/tour_guide/maps/classroom_map.yaml
 ```
 
-## 8. Shutdown
-
-Stop teleop, RViz, and SLAM with `Ctrl+C`.
-
-On the robot SSH terminal:
+Open RViz again:
 
 ```bash
-ros2 service call /stop_motor std_srvs/srv/Empty "{}"
+ros2 launch turtlebot4_viz view_navigation.launch.py
 ```
 
-Return the robot to the charger.
+Use RViz `2D Pose Estimate` to align the robot with the map. If the robot pose jumps or drifts badly, the map is not demo-grade yet.
 
-## Success criteria
+## Pass/fail criteria for this milestone
 
-The mapping step is done only when:
+Pass:
 
-- `classroom_map.yaml` and `classroom_map.pgm` exist.
-- RViz shows clean, recognizable room geometry.
-- The saved map matches the physical demo layout.
-- The robot can later be localized on that map without the pose drifting immediately.
+- `/scan`, `/odom`, and `/tf` are visible from the desktop
+- RViz displays live laser points
+- SLAM produces a recognizable classroom map
+- `classroom_map.yaml` and `classroom_map.pgm` save successfully
+- Nav2/localization can load the saved map
 
-Do not start building route logic until this is true. A route planner cannot compensate for a bad map.
+Fail:
+
+- you cannot see robot topics from the desktop
+- the LiDAR is not spinning
+- the map is warped or doubled
+- localization cannot hold the robot pose on the saved map
+
+Do not move to tour execution until this passes.
