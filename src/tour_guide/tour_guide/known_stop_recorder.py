@@ -1,10 +1,3 @@
-"""Record clicked RViz map points as tour stops.
-
-This helper is intentionally simple for real-robot demos: after a classroom map is
-built and Nav2 is localized, click safe floor locations in RViz and save them to
-a YAML file that navnode.py can drive through.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -69,10 +62,7 @@ class KnownStopRecorder(Node):
 
     def write_file(self) -> None:
         self.output.parent.mkdir(parents=True, exist_ok=True)
-        data = {
-            'landmarks': self.stops,
-            'notes': 'Generated from RViz /clicked_point map-frame coordinates. Goals should be open-floor Nav2 poses.',
-        }
+        data = {'landmarks': self.stops}
         with self.output.open('w', encoding='utf-8') as handle:
             yaml.safe_dump(data, handle, sort_keys=False)
 

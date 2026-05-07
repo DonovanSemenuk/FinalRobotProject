@@ -13,12 +13,6 @@ from sensor_msgs.msg import CameraInfo, Image
 
 
 class SimArucoDetector(Node):
-    """Lightweight ArUco detector for the Gazebo RGB-D camera stream.
-
-    This node avoids the external detector's sim-image crash path and publishes
-    ros2_aruco_interfaces/ArucoMarkers for the landmark mapper.
-    """
-
     def __init__(self):
         super().__init__('sim_aruco_detector')
         self.declare_parameter('image_topic', '/rgbd_camera/image')

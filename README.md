@@ -70,13 +70,7 @@ Do not continue unless `/scan`, `/odom`, and `/tf` are visible from the desktop.
 
 ## Real robot milestone 2: map the classroom with manual control
 
-Follow the full procedure in:
-
-```text
-docs/REAL_ROBOT_MAPPING.md
-```
-
-Minimal command sequence:
+See `LOGGERHEAD_MAP_AND_TOUR.md` for the full runbook. Minimal command sequence:
 
 ```bash
 # robot SSH terminal

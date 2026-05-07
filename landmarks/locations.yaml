@@ -19,4 +19,3 @@ landmarks:
     y: -2.24
     yaw: 0.0
     description: Fourth manually defined classroom tour stop.
-notes: Static fallback landmarks. Replace these with map-frame coordinates recorded from RViz on the real classroom map.

@@ -7,14 +7,6 @@ import os
 
 
 def generate_launch_description():
-    """Launch TurtleBot4 localization and Nav2 on the saved loggerhead classroom map.
-
-    This machine's Jazzy TurtleBot4 install provides localization.launch.py and
-    nav2.launch.py, not nav_bringup.launch.py. Launch localization first, then
-    bring up Nav2 after a short delay so map_server and AMCL exist before the
-    navigation lifecycle manager starts configuring its nodes.
-    """
-
     turtlebot4_navigation = get_package_share_directory('turtlebot4_navigation')
 
     localization_launch = os.path.join(

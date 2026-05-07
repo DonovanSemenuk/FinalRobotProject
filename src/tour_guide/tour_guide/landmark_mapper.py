@@ -239,10 +239,7 @@ class LandmarkMapper(Node):
             return
 
         self.output.parent.mkdir(parents=True, exist_ok=True)
-        data = {
-            'landmarks': usable,
-            'notes': 'Generated from ArUco detections in the map frame. Each goal is offset from the marker so the robot stops facing it.',
-        }
+        data = {'landmarks': usable}
         with self.output.open('w', encoding='utf-8') as f:
             yaml.safe_dump(data, f, sort_keys=False)
         self.get_logger().info(f'Wrote {len(usable)} landmarks to {self.output}')
