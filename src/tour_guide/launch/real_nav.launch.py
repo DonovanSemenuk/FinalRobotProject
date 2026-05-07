@@ -1,5 +1,5 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from ament_index_python.packages import get_package_share_directory
@@ -9,17 +9,24 @@ import os
 def generate_launch_description():
     """Launch TurtleBot4 localization and Nav2 on the saved loggerhead classroom map.
 
-    The official TurtleBot4 navigation entry point is nav_bringup.launch.py with
-    localization enabled and SLAM disabled. Using that launch file avoids the
-    common lifecycle/race problems caused by manually composing localization and
-    Nav2 in a custom launch file.
+    This machine's Jazzy TurtleBot4 install provides localization.launch.py and
+    nav2.launch.py, not nav_bringup.launch.py. Launch localization first, then
+    bring up Nav2 after a short delay so map_server and AMCL exist before the
+    navigation lifecycle manager starts configuring its nodes.
     """
 
     turtlebot4_navigation = get_package_share_directory('turtlebot4_navigation')
-    nav_bringup_launch = os.path.join(
+
+    localization_launch = os.path.join(
         turtlebot4_navigation,
         'launch',
-        'nav_bringup.launch.py',
+        'localization.launch.py',
+    )
+
+    nav2_launch = os.path.join(
+        turtlebot4_navigation,
+        'launch',
+        'nav2.launch.py',
     )
 
     default_map = os.path.expanduser(
@@ -30,26 +37,41 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'map',
             default_value=default_map,
-            description='Full path to loggerhead_classroom.yaml or another saved occupancy-grid map.',
+            description='Full path to loggerhead_classroom.yaml.',
         ),
         DeclareLaunchArgument(
             'namespace',
             default_value='',
-            description='Optional TurtleBot namespace. Leave empty for the OU single-robot setup.',
+            description='Optional TurtleBot namespace. Leave empty for the single-robot classroom setup.',
         ),
         DeclareLaunchArgument(
             'use_sim_time',
             default_value='false',
             description='Use false for the physical TurtleBot4.',
         ),
+        DeclareLaunchArgument(
+            'nav2_delay',
+            default_value='5.0',
+            description='Seconds to wait after localization starts before launching Nav2.',
+        ),
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(nav_bringup_launch),
+            PythonLaunchDescriptionSource(localization_launch),
             launch_arguments={
-                'slam': 'off',
-                'localization': 'true',
                 'map': LaunchConfiguration('map'),
                 'namespace': LaunchConfiguration('namespace'),
                 'use_sim_time': LaunchConfiguration('use_sim_time'),
             }.items(),
+        ),
+        TimerAction(
+            period=LaunchConfiguration('nav2_delay'),
+            actions=[
+                IncludeLaunchDescription(
+                    PythonLaunchDescriptionSource(nav2_launch),
+                    launch_arguments={
+                        'namespace': LaunchConfiguration('namespace'),
+                        'use_sim_time': LaunchConfiguration('use_sim_time'),
+                    }.items(),
+                ),
+            ],
         ),
     ])
