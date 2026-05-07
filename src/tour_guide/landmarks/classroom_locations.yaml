@@ -1,0 +1,21 @@
+landmarks:
+  - name: Classroom Entry
+    x: 1.55
+    y: 1.90
+    yaw: 0.0
+    description: First classroom tour stop.
+  - name: Front Board
+    x: 2.92
+    y: -0.13
+    yaw: 0.0
+    description: Front-of-room tour stop.
+  - name: Work Area
+    x: -0.31
+    y: -0.07
+    yaw: 0.0
+    description: Central classroom tour stop.
+  - name: Back Area
+    x: -0.20
+    y: -2.24
+    yaw: 0.0
+    description: Rear classroom tour stop.
