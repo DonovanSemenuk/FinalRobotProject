@@ -1,13 +1,22 @@
-waypoints:
-  - x: 1.55
+landmarks:
+  - name: Classroom Stop 1
+    x: 1.55
     y: 1.90
     yaw: 0.0
-  - x: -0.31
+    description: First manually defined classroom tour stop.
+  - name: Classroom Stop 2
+    x: -0.31
     y: -0.07
     yaw: 0.0
-  - x: 2.92
+    description: Second manually defined classroom tour stop.
+  - name: Classroom Stop 3
+    x: 2.92
     y: -0.13
     yaw: 0.0
-  - x: -0.20
+    description: Third manually defined classroom tour stop.
+  - name: Classroom Stop 4
+    x: -0.20
     y: -2.24
     yaw: 0.0
+    description: Fourth manually defined classroom tour stop.
+notes: Static fallback landmarks. Replace these with map-frame coordinates recorded from RViz on the real classroom map.
