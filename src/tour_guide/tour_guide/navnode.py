@@ -57,8 +57,9 @@ def candidate_landmark_files() -> List[Path]:
     if override:
         candidates.append(Path(override).expanduser().resolve())
 
-    # Preferred runtime output from landmark_mapper.py.
+    # Preferred runtime output from known_stop_recorder.py or landmark_mapper.py.
     candidates.append(Path.home() / "ros2_ws" / "FinalRobotProject" / "landmarks" / "discovered_locations.yaml")
+    candidates.append(Path.home() / "ros2_ws" / "FinalRobotProject" / "landmarks" / "locations.yaml")
 
     try:
         share = Path(get_package_share_directory("tour_guide"))
@@ -87,7 +88,7 @@ def load_landmarks(path: Path) -> List[Landmark]:
         searched = "\n  - ".join(str(p) for p in candidate_landmark_files())
         raise FileNotFoundError(
             f"Landmark file not found: {path}\nSearched:\n  - {searched}\n"
-            "Set TOUR_GUIDE_LANDMARKS=/path/to/locations.yaml or run landmark_mapper first."
+            "Set TOUR_GUIDE_LANDMARKS=/path/to/locations.yaml or run known_stop_recorder first."
         )
 
     with path.open("r", encoding="utf-8") as handle:
@@ -179,7 +180,7 @@ def run_route(navigator: TurtleBot4Navigator, route: List[Landmark], stop_delay:
         navigator.info(f"Stop {stop_number}/{len(route)}: navigating to {landmark.name}")
         navigator.startToPose(pose)
         wait_for_navigation(navigator)
-        navigator.info(f"Arrived at {landmark.name}. Holding for {stop_delay:.1f} seconds.")
+        navigator.info(f"Finished goal for {landmark.name}. Holding for {stop_delay:.1f} seconds.")
         if landmark.description:
             navigator.info(landmark.description)
         time.sleep(stop_delay)
@@ -190,6 +191,14 @@ def parse_args(argv=None):
     parser.add_argument("--landmarks", type=str, default=None, help="Path to a landmark YAML file.")
     parser.add_argument("--once", action="store_true", help="Run one selected route and exit.")
     parser.add_argument("--route", type=str, default=None, help="Route selection such as 'all', 'nearest', or '0,2,1'.")
+    parser.add_argument(
+        "--set-initial-pose",
+        action="store_true",
+        help="Publish an initial pose before waiting for Nav2. Otherwise set the initial pose manually in RViz.",
+    )
+    parser.add_argument("--initial-x", type=float, default=float(os.environ.get("TOUR_GUIDE_INITIAL_X", "0.0")))
+    parser.add_argument("--initial-y", type=float, default=float(os.environ.get("TOUR_GUIDE_INITIAL_Y", "0.0")))
+    parser.add_argument("--initial-yaw", type=float, default=float(os.environ.get("TOUR_GUIDE_INITIAL_YAW", "0.0")))
     return parser.parse_args(argv)
 
 
@@ -202,13 +211,15 @@ def main(args=None):
     landmarks = load_landmarks(landmark_path)
     stop_delay = float(os.environ.get("TOUR_GUIDE_STOP_DELAY", "5.0"))
 
-    if os.environ.get("TOUR_GUIDE_SET_INITIAL_POSE", "1") != "0":
-        initial_pose = make_pose(
-            float(os.environ.get("TOUR_GUIDE_INITIAL_X", "0.0")),
-            float(os.environ.get("TOUR_GUIDE_INITIAL_Y", "0.0")),
-            float(os.environ.get("TOUR_GUIDE_INITIAL_YAW", "0.0")),
+    if cli.set_initial_pose or os.environ.get("TOUR_GUIDE_SET_INITIAL_POSE", "0") == "1":
+        initial_pose = make_pose(cli.initial_x, cli.initial_y, cli.initial_yaw)
+        initial_pose.header.stamp = navigator.get_clock().now().to_msg()
+        navigator.info(
+            f"Setting initial pose to x={cli.initial_x:.2f}, y={cli.initial_y:.2f}, yaw={cli.initial_yaw:.2f}"
         )
         navigator.setInitialPose(initial_pose)
+    else:
+        navigator.info("Initial pose will not be forced by the tour node. Set it in RViz before sending goals.")
 
     navigator.info("Waiting for Nav2 to become active...")
     navigator.waitUntilNav2Active()
